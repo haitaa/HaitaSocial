@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Comments } from "./Comments";
 
 export const Post = () => {
   return (
@@ -38,9 +39,9 @@ export const Post = () => {
         </p>
       </div>
       {/* Interaction */}
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-sm my-4">
         <div className="flex gap-8">
-          <div className="flex items-center gap-4 bg-slate-100 p-2 rounded-xl">
+          <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
             <Image
               src={"/like.png"}
               alt=""
@@ -54,7 +55,7 @@ export const Post = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-4 bg-slate-100 p-2 rounded-xl">
+          <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
             <Image
               src={"/comment.png"}
               alt=""
@@ -84,6 +85,7 @@ export const Post = () => {
           </div>
         </div>
       </div>
+      <Comments />
     </div>
   );
 };
