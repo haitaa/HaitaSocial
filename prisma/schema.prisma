@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String          @id @default(cuid()) @map("_id") @db.ObjectId
+  username               String          @unique
+  avatar                 String?
+  cover                  String?
+  firstName              String?         @map("first_name")
+  lastName               String?         @map("last_name")
+  description            String?
+  city                   String?
+  school                 String?
+  work                   String?
+  website                String?
+  createdAt              DateTime        @default(now()) @map("created_at")
+  posts                  Post[]
+  comments               Comment[]
+  likes                  Like[]
+  followers              Follower[]      @relation("UserFollowers")
+  followings             Follower[]      @relation("UserFollowing")
+  followRequestsSent     FollowRequest[] @relation("FollowRequestSender")
+  followRequestsReceived FollowRequest[] @relation("FollowRequestReceiver")
+  blocks                 Block[]         @relation("BlocksSent")
+  blockedBy              Block[]         @relation("BlocksReceived")
+  stories                Story[]
+}
+
+model Post {
+  id          String    @id @default(cuid()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String    @map("user_id") @db.ObjectId
+  likes       Like[]
+  comments    Comment[]
+}
+
+model Comment {
+  id          String   @id @default(cuid()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  Post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId      String   @db.ObjectId
+  likes       Like[]
+}
+
+model Like {
+  id        String   @id @default(cuid()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id") @db.ObjectId
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String?  @map("post_id") @db.ObjectId
+  Comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String?  @db.ObjectId
+}
+
+model Follower {
+  id          String   @id @default(cuid()) @map("_id") @db.ObjectId
+  createdAt   DateTime @default(now()) @map("created_at")
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  String   @map("follower_id") @db.ObjectId
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId String   @map("following_id") @db.ObjectId
+}
+
+model FollowRequest {
+  id         String   @id @default(cuid()) @map("_id") @db.ObjectId
+  createdAt  DateTime @default(now()) @map("created_at")
+  sender     User     @relation("FollowRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId   String   @map("sender_id") @db.ObjectId
+  receiver   User     @relation("FollowRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId String   @map("receiver_id") @db.ObjectId
+
+  @@unique([senderId, receiverId])
+}
+
+model Block {
+  id        String   @id @default(cuid()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now()) @map("created_at")
+  blocker   User     @relation("BlocksSent", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockerId String   @map("blocker_id") @db.ObjectId
+  blocked   User     @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+  blockedId String   @map("blocked_id") @db.ObjectId
+
+  @@unique([blockerId, blockedId])
+}
+
+model Story {
+  id        String   @id @default(cuid()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique @db.ObjectId
+  image     String
+}
