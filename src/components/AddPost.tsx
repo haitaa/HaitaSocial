@@ -32,7 +32,7 @@ export const AddPost = () => {
         {/* Post Options */}
         <div
           className="flex items-center gap-4 mt-4 text-gray-400"
-          flex-wrap={true}
+          flex-wrap="true"
         >
           <div className="flex items-center gap-2 cursor-pointer">
             <Image src={"/addImage.png"} alt="" width={20} height={20} />
