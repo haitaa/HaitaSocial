@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Comments } from "./Comments";
+import { Comments } from "@/components/feed/Comments";
 
 export const Post = () => {
   return (
