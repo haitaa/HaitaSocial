@@ -83,7 +83,7 @@ model Follower {
 }
 
 model FollowRequest {
-  id         String   @id @default(cuid()) @map("_id") @db.ObjectId
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   createdAt  DateTime @default(now()) @map("created_at")
   sender     User     @relation("FollowRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
   senderId   String   @map("sender_id") @db.ObjectId
@@ -94,7 +94,7 @@ model FollowRequest {
 }
 
 model Block {
-  id        String   @id @default(cuid()) @map("_id") @db.ObjectId
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   createdAt DateTime @default(now()) @map("created_at")
   blocker   User     @relation("BlocksSent", fields: [blockerId], references: [id], onDelete: Cascade)
   blockerId String   @map("blocker_id") @db.ObjectId
