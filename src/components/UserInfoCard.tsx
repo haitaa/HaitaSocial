@@ -5,6 +5,8 @@ import Link from "next/link";
 import { prisma } from "../../lib/client";
 import { UserInfoCardInteraction } from "./UserInfoCardInteraction";
 
+import { UpdateUser } from "./updateUser";
+
 interface UserInfoCardProps {
   user: User;
 }
@@ -64,9 +66,13 @@ export const UserInfoCard = async ({ user }: UserInfoCardProps) => {
       {/* Top */}
       <div className="flex justify-between items-center font-medium">
         <span className="text-gray-500">User Information</span>
-        <Link href={"/"} className="text-blue-500 text-xs">
-          See all
-        </Link>
+        {currentUserByMongo.id === user.id ? (
+          <UpdateUser />
+        ) : (
+          <Link href={"/"} className="text-blue-500 text-xs">
+            See all
+          </Link>
+        )}
       </div>
       {/* Bottom */}
       <div className="flex flex-col gap-4 text-gray-500">
@@ -120,13 +126,14 @@ export const UserInfoCard = async ({ user }: UserInfoCardProps) => {
             <span>Joined {formattedDate}</span>
           </div>
         </div>
-        <UserInfoCardInteraction
-          userId={user.id}
-          currentUserId={currentUserByMongo.id}
-          isUserBlocked={isUserBlocked}
-          isFollowing={isFollowing}
-          isFollowingRequestSent={isFollowingRequestSent}
-        />
+        {currentUserByMongo && currentUserByMongo.id !== user.id && (
+          <UserInfoCardInteraction
+            userId={user.id}
+            isUserBlocked={isUserBlocked}
+            isFollowing={isFollowing}
+            isFollowingRequestSent={isFollowingRequestSent}
+          />
+        )}
       </div>
     </div>
   );

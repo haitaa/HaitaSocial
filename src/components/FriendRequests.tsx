@@ -1,7 +1,43 @@
-import Image from "next/image";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { prisma } from "../../lib/client";
+import { FriendRequestsList } from "./FriendRequestList";
 
-export const FriendRequests = () => {
+/**
+ * Retrieves and returns the friend requests for the current authenticated user.
+ * This function first checks if the user is authenticated, then fetches the user's data,
+ * and finally retrieves the follow requests where the user is the receiver.
+ *
+ * @returns {Promise<Array|null>} - Returns an array of friend requests with sender details, or null if no requests exist or the user is not authenticated.
+ */
+export const FriendRequests = async () => {
+  // Retrieve the current authenticated user's ID.
+  const { userId } = auth();
+
+  // If there is no authenticated user, return null.
+  if (!userId) return null;
+
+  // Fetch the user from the database based on their Clerk ID.
+  const user = await prisma.user.findFirst({
+    where: { clerkId: userId },
+  });
+
+  // If the user is not found, return null.
+  if (!user) return null;
+
+  // Retrieve all follow requests where the user is the receiver.
+  const requests = await prisma.followRequest.findMany({
+    where: {
+      receiverId: user.id,
+    },
+    include: {
+      sender: true, // Include sender details in the result.
+    },
+  });
+
+  // If there are no follow requests, return null.
+  if (requests.length === 0) return null;
+
   return (
     <div className="p-4 bg-white rounded-lg shadow-md text-sm flex flex-col gap-4">
       {/* Top */}
@@ -12,66 +48,7 @@ export const FriendRequests = () => {
         </Link>
       </div>
       {/* User  */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Image
-            src={
-              "https://images.pexels.com/photos/27964839/pexels-photo-27964839/free-photo-of-deniz-siyah-ve-beyaz-kent-sehir.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load"
-            }
-            alt=""
-            height={40}
-            width={40}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-          <span className="font-semibold">Bruce Wayne</span>
-        </div>
-        <div className="flex gap-3 justify-end">
-          <Image
-            src={"/accept.png"}
-            alt=""
-            width={20}
-            height={20}
-            className="cursor-pointer"
-          />
-          <Image
-            src={"/reject.png"}
-            alt=""
-            width={20}
-            height={20}
-            className="cursor-pointer"
-          />
-        </div>
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Image
-            src={
-              "https://images.pexels.com/photos/27964839/pexels-photo-27964839/free-photo-of-deniz-siyah-ve-beyaz-kent-sehir.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load"
-            }
-            alt=""
-            height={40}
-            width={40}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-          <span className="font-semibold">John Lee</span>
-        </div>
-        <div className="flex gap-3 justify-end">
-          <Image
-            src={"/accept.png"}
-            alt=""
-            width={20}
-            height={20}
-            className="cursor-pointer"
-          />
-          <Image
-            src={"/reject.png"}
-            alt=""
-            width={20}
-            height={20}
-            className="cursor-pointer"
-          />
-        </div>
-      </div>
+      <FriendRequestsList requests={requests} />
     </div>
   );
 };

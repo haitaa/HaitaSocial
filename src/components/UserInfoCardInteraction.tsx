@@ -5,7 +5,6 @@ import { switchBlock, switchFollow } from "../../lib/actions";
 
 interface UserInfoCardInteractionProps {
   userId: string;
-  currentUserId: string;
   isUserBlocked: boolean;
   isFollowing: boolean;
   isFollowingRequestSent: boolean;
@@ -13,7 +12,6 @@ interface UserInfoCardInteractionProps {
 
 export const UserInfoCardInteraction = ({
   userId,
-  currentUserId,
   isUserBlocked,
   isFollowing,
   isFollowingRequestSent,
@@ -103,24 +101,20 @@ export const UserInfoCardInteraction = ({
     <>
       <form action={follow}>
         <button className="w-full bg-blue-500 text-white text-sm rounded-md p-2">
-          {userId === currentUserId
-            ? "Edit Profile"
-            : optimisticState.following
+          {optimisticState.following
             ? "Unfollow"
             : optimisticState.followingRequestSent
             ? "Friend Request Sent"
             : "Follow"}
         </button>
       </form>
-      {userId !== currentUserId && (
-        <form action={block} className="self-end">
-          <button>
-            <span className="text-red-400 text-xs cursor-pointer">
-              {optimisticState.blocked ? "Unblock user" : "Block user"}
-            </span>
-          </button>
-        </form>
-      )}
+      <form action={block} className="self-end">
+        <button>
+          <span className="text-red-400 text-xs cursor-pointer">
+            {optimisticState.blocked ? "Unblock user" : "Block user"}
+          </span>
+        </button>
+      </form>
     </>
   );
 };

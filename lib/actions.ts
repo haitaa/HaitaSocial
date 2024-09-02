@@ -92,44 +92,96 @@ export const switchFollow = async (userId: string) => {
  * @throws Will throw an error if the user is unauthorized, not found, or if the operation fails.
  */
 export const switchBlock = async (userId: string) => {
-    const { userId: currentUserId } = auth(); // Get the current authenticated user's ID.
+  const { userId: currentUserId } = auth(); // Get the current authenticated user's ID.
 
-    if (!currentUserId) {
-        throw new Error("Unauthorized"); // Throw an error if the user is not authenticated.
+  if (!currentUserId) {
+    throw new Error("Unauthorized"); // Throw an error if the user is not authenticated.
+  }
+
+  // Retrieve the current user from the database using their Clerk ID.
+  const user = await getUserByClerkId(currentUserId);
+
+  if (!user) {
+    throw new Error("User not found!"); // Throw an error if the current user is not found in the database.
+  }
+
+  try {
+    // Check if there is an existing block relationship where the current user is the blocker and the target user is blocked.
+    const existingBlock = await prisma.block.findFirst({
+      where: {
+        blockerId: user.id, // The ID of the current user who might have blocked the target user.
+        blockedId: userId, // The ID of the target user who might be blocked.
+      },
+    });
+
+    if (existingBlock) {
+      // If a block relationship exists, unblock the target user by deleting the block record.
+      await prisma.block.delete({
+        where: { id: existingBlock.id }, // Delete the block record using its ID.
+      });
+    } else {
+      // If no block relationship exists, block the target user by creating a new block record.
+      await prisma.block.create({
+        data: {
+          blockerId: user.id, // The ID of the current user who is blocking the target user.
+          blockedId: userId, // The ID of the target user who is being blocked.
+        },
+      });
     }
+  } catch (error) {
+    console.log(error); // Log any error that occurs during the operation.
+    throw new Error("Something went wrong!"); // Throw a generic error if something goes wrong.
+  }
+};
 
-    // Retrieve the current user from the database using their Clerk ID.
-    const user = await getUserByClerkId(currentUserId);
+/**
+ * Accepts a follow request from another user.
+ * If a follow request exists from the target user to the current user, it is accepted:
+ * - The follow request is deleted.
+ * - The target user is added as a follower of the current user.
+ * @param {string} userId - The ID of the user who sent the follow request.
+ * @throws Will throw an error if the user is unauthorized, not found, or if the operation fails.
+ */
+export const acceptFollowRequest = async (userId: string) => {
+  const { userId: currentUserId } = auth(); // Get the current authenticated user's ID.
 
-    if (!user) {
-        throw new Error("User not found!"); // Throw an error if the current user is not found in the database.
+  if (!currentUserId) {
+    throw new Error("Unauthorized"); // Throw an error if the user is not authenticated.
+  }
+
+  // Retrieve the current user from the database using their Clerk ID.
+  const user = await getUserByClerkId(currentUserId);
+  
+  if (!user) {
+    throw new Error("User not found!"); // Throw an error if the current user is not found in the database.
+  }
+
+  try {
+    // Check if there is an existing follow request from the target user to the current user.
+    const existingFollowRequest = await prisma.followRequest.findFirst({
+      where: {
+        senderId: userId, // The ID of the user who sent the follow request.
+        receiverId: user.id, // The ID of the current user who received the follow request.
+      },
+    });
+
+    if (existingFollowRequest) {
+      // If a follow request exists, delete it from the database.
+      await prisma.followRequest.delete({
+        where: { id: existingFollowRequest.id }, // Delete the follow request using its ID.
+      });
+
+      // Add the target user as a follower of the current user by creating a new follower record.
+      await prisma.follower.create({
+        data: {
+          followerId: userId, // The ID of the user who is now following the current user.
+          followingId: user.id, // The ID of the current user who is being followed.
+        },
+      });
     }
+  } catch (error) {
+    console.error(error); // Log any error that occurs during the operation.
+    throw new Error("Something went wrong!"); // Throw a generic error if something goes wrong.
+  }
+};
 
-    try {
-        // Check if there is an existing block relationship where the current user is the blocker and the target user is blocked.
-        const existingBlock = await prisma.block.findFirst({
-            where: {
-                blockerId: user.id, // The ID of the current user who might have blocked the target user.
-                blockedId: userId,  // The ID of the target user who might be blocked.
-            }
-        });
-
-        if (existingBlock) {
-            // If a block relationship exists, unblock the target user by deleting the block record.
-            await prisma.block.delete({
-                where: { id: existingBlock.id }, // Delete the block record using its ID.
-            });
-        } else {
-            // If no block relationship exists, block the target user by creating a new block record.
-            await prisma.block.create({
-                data: {
-                    blockerId: user.id, // The ID of the current user who is blocking the target user.
-                    blockedId: userId,  // The ID of the target user who is being blocked.
-                },
-            });
-        }
-    } catch (error) {
-        console.log(error); // Log any error that occurs during the operation.
-        throw new Error("Something went wrong!"); // Throw a generic error if something goes wrong.
-    }
-}

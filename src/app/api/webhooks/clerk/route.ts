@@ -55,8 +55,8 @@ export async function POST(req: Request) {
   // For this guide, you simply log the payload to the console
   const { id } = evt.data
   const eventType = evt.type
-//   console.log(`Webhook with and ID of ${id} and type of ${eventType}`)
-//   console.log('Webhook body:', body)
+  // console.log(`Webhook with and ID of ${id} and type of ${eventType}`)
+  // console.log('Webhook body:', body)
 
   if (eventType === 'user.created') {
     try {
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         await prisma.user.create({
             data: {
                 id: objectId.toHexString(),
-                clerkId: evt.data.id,
+                clerkId: id,
                 username: JSON.parse(body).data.username,
                 avatar: JSON.parse(body).data.image_url || "/noAvatar.png",
                 cover: "/noCover.png",
