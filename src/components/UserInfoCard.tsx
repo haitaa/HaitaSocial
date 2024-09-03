@@ -5,7 +5,7 @@ import Link from "next/link";
 import { prisma } from "../../lib/client";
 import { UserInfoCardInteraction } from "./UserInfoCardInteraction";
 
-import { UpdateUser } from "./updateUser";
+import { UpdateUser } from "@/components/UpdateUser";
 
 interface UserInfoCardProps {
   user: User;
@@ -67,7 +67,7 @@ export const UserInfoCard = async ({ user }: UserInfoCardProps) => {
       <div className="flex justify-between items-center font-medium">
         <span className="text-gray-500">User Information</span>
         {currentUserByMongo.id === user.id ? (
-          <UpdateUser />
+          <UpdateUser user={currentUserByMongo} />
         ) : (
           <Link href={"/"} className="text-blue-500 text-xs">
             See all

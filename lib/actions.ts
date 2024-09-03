@@ -1,5 +1,6 @@
 "use server";
 
+import * as z from "zod";
 import { auth } from "@clerk/nextjs/server"; // Import authentication functions from Clerk.
 import { prisma } from "./client"; // Import the Prisma client for database interactions.
 
@@ -147,7 +148,7 @@ export const acceptFollowRequest = async (userId: string) => {
 
   if (!currentUserId) {
     throw new Error("Unauthorized"); // Throw an error if the user is not authenticated.
-  }
+  } 
 
   // Retrieve the current user from the database using their Clerk ID.
   const user = await getUserByClerkId(currentUserId);
@@ -174,10 +175,17 @@ export const acceptFollowRequest = async (userId: string) => {
       // Add the target user as a follower of the current user by creating a new follower record.
       await prisma.follower.create({
         data: {
-          followerId: userId, // The ID of the user who is now following the current user.
-          followingId: user.id, // The ID of the current user who is being followed.
+          followerId: user.id, // The ID of the current user who is being followed.
+          followingId: userId, // The ID of the user who is now following the current user.
         },
       });
+      
+      await prisma.follower.create({
+        data: {
+          followerId: userId, // The ID of the user who is now following the current user.
+          followingId: user.id, // The ID of the current user who is being followed.
+        }
+      })
     }
   } catch (error) {
     console.error(error); // Log any error that occurs during the operation.
@@ -185,3 +193,89 @@ export const acceptFollowRequest = async (userId: string) => {
   }
 };
 
+/**
+ * Deletes a follow request sent by a specific user to the currently authenticated user.
+ *
+ * This function performs the following steps:
+ * Checks if the current user is authenticated.
+ * Retrieves the current user's data from the database using their Clerk ID.
+ * Searches for an existing follow request from the specified user.
+ * If found, deletes the follow request from the database.
+ *
+ * @param {string} userId - The ID of the user who sent the follow request to the current user.
+ * @throws Will throw an error if the operation fails, the user is unauthorized, or not found.
+ */
+export const deleteFollowRequests = async (userId: string) => {
+  const { userId: currentUserId } = auth();
+
+  if (!currentUserId) {
+    throw new Error("Unauthorized");
+  }
+
+  // Retrieve the current user from the database using their Clerk ID.
+  const user = await getUserByClerkId(currentUserId);
+
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+  try {
+    const existingFollowRequest = await prisma.followRequest.findFirst({
+      where: {
+        senderId: userId,
+        receiverId: user.id,
+      },
+    });
+
+    if (existingFollowRequest) {
+      await prisma.followRequest.delete({
+        where: { id: existingFollowRequest.id },
+      });
+    }
+  } catch (error) {
+    throw new Error("Something went wrong!")
+  }
+}
+
+export const updateProfile = async (formData: FormData) => {
+  const fields = Object.fromEntries(formData);
+
+  const Profile = z.object({
+    cover: z.string().optional(),
+    firstName: z.string().max(60).optional(),
+    lastName: z.string().max(60).optional(),
+    description: z.string().max(255).optional(),
+    city: z.string().max(60).optional(),
+    school: z.string().max(60).optional(),
+    work: z.string().max(60).optional(),
+    website: z.string().max(60).optional(),
+  })
+
+  const validatedFields = Profile.safeParse(fields);
+
+  if (!validatedFields.success) {
+    console.log(validatedFields.error.flatten().fieldErrors);
+    throw new Error("Invalid fields");
+  }
+
+  const { userId } = auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await getUserByClerkId(userId);
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...validatedFields.data,
+      }
+    })
+  } catch(error) {
+    throw new Error("Something went wrong!")
+  }
+}
