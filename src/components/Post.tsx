@@ -1,42 +1,52 @@
 import Image from "next/image";
+
+import { Post as PostType, User } from "@prisma/client";
 import { Comments } from "@/components/feed/Comments";
 
-export const Post = () => {
+type FeedPostType = PostType & { user: User } & {
+  likes: [{ userId: string }];
+} & {
+  _count: { comments: number };
+};
+
+interface PostProps {
+  post: FeedPostType;
+}
+
+export const PostComponent = ({ post }: PostProps) => {
   return (
     <div className="flex flex-col gap-4">
       {/* User */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Image
-            src={
-              "https://images.pexels.com/photos/26562785/pexels-photo-26562785/free-photo-of-kent-sehir-kent-simgesi-gorulecek-yer.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load"
-            }
+            src={post.user.avatar || "/noAvatar.png"}
             alt=""
             width={40}
             height={40}
             className="w-10 h-10 rounded-full"
           />
-          <span className="font-medium">John Doe</span>
+          <span className="font-medium">
+            {post.user.firstName && post.user.lastName
+              ? `${post.user.firstName} ${post.user.lastName}`
+              : post.user.username}
+          </span>
         </div>
         <Image src="/more.png" alt="" width={16} height={16} />
       </div>
       {/* Description */}
       <div className="flex flex-col gap-4">
-        <div className="w-full min-h-96 relative">
-          <Image
-            src={
-              "https://images.pexels.com/photos/26562785/pexels-photo-26562785/free-photo-of-kent-sehir-kent-simgesi-gorulecek-yer.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load"
-            }
-            alt=""
-            fill
-            className="object-contain rounded-md"
-          />
-        </div>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-          voluptas laudantium ut iure pariatur vel ducimus voluptate, inventore
-          aliquid natus!
-        </p>
+        {post.image && (
+          <div className="w-full min-h-96 relative">
+            <Image
+              src={post.image}
+              alt=""
+              fill
+              className="object-contain rounded-md"
+            />
+          </div>
+        )}
+        <p>{post.description}</p>
       </div>
       {/* Interaction */}
       <div className="flex items-center justify-between text-sm my-4">
@@ -51,7 +61,8 @@ export const Post = () => {
             />
             <span className="text-gray-300">|</span>
             <span className="text-gray-500">
-              123<span className="hidden md:inline"> Likes</span>
+              123
+              <span className="hidden md:inline"> Likes</span>
             </span>
           </div>
 
@@ -80,7 +91,7 @@ export const Post = () => {
             />
             <span className="text-gray-300">|</span>
             <span className="text-gray-500">
-              6<span className="hidden md:inline"> Shares</span>
+              <span className="hidden md:inline"> Shares</span>
             </span>
           </div>
         </div>

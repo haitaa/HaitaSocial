@@ -1,3 +1,5 @@
+"use server";
+
 import { Feed } from "@/components/feed/Feed";
 import { LeftMenu } from "@/components/leftMenu/LeftMenu";
 import { RightMenu } from "@/components/RightMenu";
@@ -92,7 +94,7 @@ const ProfilePage = async ({ params }: { params: { username: string } }) => {
               </div>
             </div>
           </div>
-          <Feed />
+          <Feed username={currentUserMongoId.username} />
         </div>
       </div>
       <div className="hidden lg:block w-[30%]">

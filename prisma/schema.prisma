@@ -44,7 +44,7 @@ model Post {
   description String
   image       String?
   createdAt   DateTime  @default(now()) @map("created_at")
-  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String    @map("user_id") @db.ObjectId
   likes       Like[]
   comments    Comment[]
@@ -55,7 +55,7 @@ model Comment {
   description String
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String   @db.ObjectId
   Post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId      String   @db.ObjectId

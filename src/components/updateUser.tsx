@@ -6,6 +6,7 @@ import { useActionState, useState } from "react";
 import { updateProfile } from "../../lib/actions";
 import { CldUploadWidget } from "next-cloudinary";
 import { useRouter } from "next/navigation";
+import { UpdateButton } from "./UpdateButton";
 
 interface UpdateUserProps {
   user: User;
@@ -159,9 +160,7 @@ export const UpdateUser = ({ user }: UpdateUserProps) => {
                 ></input>
               </div>
             </div>
-            <button className="bg-blue-500 p-2 mt-2 rounded-md text-white">
-              Update
-            </button>
+            <UpdateButton />
             {state.success && (
               <span className="text-green-500">Profile has been updated!</span>
             )}
