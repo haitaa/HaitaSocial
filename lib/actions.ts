@@ -237,7 +237,8 @@ export const deleteFollowRequests = async (userId: string) => {
   }
 }
 
-export const updateProfile = async (formData: FormData, cover: string) => {
+export const updateProfile = async (prevState: {success: boolean; error: boolean}, payload: {formData: FormData; cover: string}) => {
+  const { formData, cover } = payload;
   const fields = Object.fromEntries(formData);
 
   const filteredFields = Object.fromEntries(
@@ -260,17 +261,26 @@ export const updateProfile = async (formData: FormData, cover: string) => {
   const validatedFields = Profile.safeParse({cover, ...filteredFields});
 
   if (!validatedFields.success) {
-    throw new Error("Invalid fields");
+    return {
+      success: false,
+      error: true,
+    }
   }
 
   const { userId } = auth();
   if (!userId) {
-    throw new Error("Unauthorized");
+    return {
+      success: false,
+      error: true,
+    }
   }
 
   const user = await getUserByClerkId(userId);
   if (!user) {
-    throw new Error("User not found!");
+    return {
+      success: false,
+      error: true,
+    }
   }
 
   try {
@@ -280,7 +290,14 @@ export const updateProfile = async (formData: FormData, cover: string) => {
         ...validatedFields.data,
       }
     })
+    return {
+      success: true,
+      error: false,
+    }
   } catch(error) {
-    throw new Error("Something went wrong!")
+    return {
+      success: false,
+      error: true,
+    }
   }
 }
