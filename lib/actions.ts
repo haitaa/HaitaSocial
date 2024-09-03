@@ -237,8 +237,14 @@ export const deleteFollowRequests = async (userId: string) => {
   }
 }
 
-export const updateProfile = async (formData: FormData) => {
+export const updateProfile = async (formData: FormData, cover: string) => {
   const fields = Object.fromEntries(formData);
+
+  const filteredFields = Object.fromEntries(
+    Object.entries(fields).filter(([_, value]) => value !== "") 
+  )
+  
+  console.log(filteredFields);
 
   const Profile = z.object({
     cover: z.string().optional(),
@@ -251,10 +257,9 @@ export const updateProfile = async (formData: FormData) => {
     website: z.string().max(60).optional(),
   })
 
-  const validatedFields = Profile.safeParse(fields);
+  const validatedFields = Profile.safeParse({cover, ...filteredFields});
 
   if (!validatedFields.success) {
-    console.log(validatedFields.error.flatten().fieldErrors);
     throw new Error("Invalid fields");
   }
 
